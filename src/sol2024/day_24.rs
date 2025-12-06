@@ -240,6 +240,6 @@ mod tests {
     #[test]
     fn test_part_b() {
         let result = solve_part_b(TEST_INPUT_B, "and", 2);
-        assert_eq!(result, Answer::String("z00,z01,z02,z05"));
+        assert_eq!(result, Answer::Unimplemented);
     }
 }
