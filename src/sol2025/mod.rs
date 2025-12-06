@@ -21,7 +21,7 @@ mod tests {
     #[rustfmt::skip]
     const ANSWERS: [(Answer, Answer); 2] = [
         /* day 01 */ (Answer::Number(1195), Answer::Number(6770)),
-        /* day 02 */ (Answer::Number(16793817782), Answer::Unimplemented),
+        /* day 02 */ (Answer::Number(16793817782), Answer::Number(27469417404)),
     ];
 
     #[test]

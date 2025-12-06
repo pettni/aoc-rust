@@ -1,10 +1,28 @@
+use crate::hash::FxHashSet;
 use crate::math::number_length;
 use crate::Answer;
+
+fn repeat_number(x: u64, k: u32) -> u64 {
+    let mut ret = x;
+    let num_digits = number_length(x);
+    for _ in 0..k - 1 {
+        ret *= 10u64.pow(num_digits as u32);
+        ret += x;
+    }
+    ret
+}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 struct Range {
     from: u64,
     to: u64,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+struct InvalidNumberIterator {
+    k: u32,
+    rep_number: u64,
+    end: u64,
 }
 
 impl Range {
@@ -16,47 +34,60 @@ impl Range {
         }
     }
 
-    pub fn contains(self, x: u64) -> bool {
-        x >= self.from && x <= self.to
+    pub fn iter(self, k: u32) -> InvalidNumberIterator {
+        let num_digits = number_length(self.from) as u32;
+        let mut rep_number = self.from / 10u64.pow((k - 1) * num_digits.div_ceil(k));
+        loop {
+            let x = repeat_number(rep_number, k);
+            if x >= self.from {
+                break;
+            }
+            rep_number += 1;
+        }
+        InvalidNumberIterator {
+            k,
+            rep_number,
+            end: self.to,
+        }
     }
 }
 
-fn get_half_number(x: u64) -> u64 {
-    let half_num_digits = (number_length(x) + 1).checked_div(2).unwrap();
-    x / 10u64.pow(half_num_digits as u32)
+impl Iterator for InvalidNumberIterator {
+    type Item = u64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let x = repeat_number(self.rep_number, self.k);
+        if x > self.end {
+            return None;
+        }
+        self.rep_number += 1;
+        Some(x)
+    }
 }
 
 pub fn part_a(input: &str) -> Answer {
-    let mut result = 0;
-
-    let range_analyzer = |range: Range| {
-        let mut half_number = get_half_number(range.from);
-        loop {
-            let num_digits = number_length(half_number) as u32;
-            let x = half_number * 10u64.pow(num_digits) + half_number;
-
-            if range.contains(x) {
-                result += x;
-            } else if x > range.to {
-                break;
-            }
-
-            half_number += 1;
-        }
-    };
-
-    input
-        .trim()
-        .split(",")
-        .map(Range::from_str)
-        .for_each(range_analyzer);
-
-    Answer::Number(result as i64)
+    Answer::Number(
+        input
+            .trim()
+            .split(",")
+            .map(Range::from_str)
+            .flat_map(|range: Range| range.iter(2))
+            .sum::<u64>() as i64,
+    )
 }
 
 pub fn part_b(input: &str) -> Answer {
-    let _ = input;
-    Answer::default()
+    let unique_numbers = input
+        .trim()
+        .split(",")
+        .map(Range::from_str)
+        .flat_map(|range| {
+            let k_to = number_length(range.to) as u32;
+            (2..k_to + 1).flat_map(move |k| range.iter(k))
+        })
+        .collect::<FxHashSet<u64>>();
+
+    Answer::Number(unique_numbers.iter().sum::<u64>() as i64)
 }
 
 #[cfg(test)]
@@ -77,6 +108,6 @@ mod tests {
     #[test]
     fn test_part_b() {
         let result = part_b(TEST_INPUT);
-        assert_eq!(result, Answer::Unimplemented);
+        assert_eq!(result, Answer::Number(4174379265));
     }
 }
