@@ -1,4 +1,4 @@
-use aoc2024::{get_default_data_path, Answer};
+use aoc::{get_default_data_path, Answer, Solutions};
 use clap::{ArgAction, Parser, Subcommand};
 use std::fs;
 use std::hint::black_box;
@@ -24,6 +24,8 @@ enum Commands {
 
 #[derive(Parser)]
 struct RunArgs {
+    pub year: u32,
+    #[arg(short, long, default_value=None)]
     pub day: u32,
     #[arg(short, long, default_value=None)]
     pub input: Option<PathBuf>,
@@ -62,10 +64,30 @@ fn part_run(f: impl Fn(&str) -> Answer, input: &str, benchmark: bool) -> (Answer
     }
 }
 
+fn get_num_solutions(year: u32) -> usize {
+    if year == 2024 {
+        return aoc::sol2024::ALL.len();
+    } else if year == 2025 {
+        return aoc::sol2025::ALL.len();
+    }
+    panic!("Invalid year {}", year);
+}
+
+fn get_solutions(year: u32, day: u32) -> Solutions {
+    if year == 2024 {
+        return *aoc::sol2024::ALL
+            .get(day.saturating_sub(1) as usize)
+            .unwrap_or_else(|| panic!("Invalid year-day {}-{}", year, day));
+    } else if year == 2025 {
+        return *aoc::sol2025::ALL
+            .get(day.saturating_sub(1) as usize)
+            .unwrap_or_else(|| panic!("Invalid year-day {}-{}", year, day));
+    }
+    panic!("Invalid year {}", year);
+}
+
 fn main_run(args: &RunArgs) -> Result<Duration, Box<dyn std::error::Error>> {
-    let (part_a, part_b) = aoc2024::solutions::ALL
-        .get(args.day.saturating_sub(1) as usize)
-        .unwrap_or_else(|| panic!("Invalid day {}", args.day));
+    let (part_a, part_b) = get_solutions(args.year, args.day);
 
     let path: PathBuf = args
         .input
@@ -87,15 +109,21 @@ fn main_run(args: &RunArgs) -> Result<Duration, Box<dyn std::error::Error>> {
 
 fn main_run_all(args: &RunAllArgs) -> Result<(), Box<dyn std::error::Error>> {
     let mut total_duration: Duration = Duration::default();
-    for day in 1..aoc2024::solutions::ALL.len() + 1 {
-        let args = RunArgs {
-            day: day as u32,
-            input: None,
-            benchmark: args.benchmark,
-        };
-        println!("Running day {day:02}");
-        let day_duration = main_run(&args)?;
-        total_duration += day_duration;
+    for year in 2024..2025 + 1 {
+        println!("====================================================");
+        println!("Running year {year}");
+        println!("====================================================");
+        for day in 1..get_num_solutions(year) + 1 {
+            let args = RunArgs {
+                year,
+                day: day as u32,
+                input: None,
+                benchmark: args.benchmark,
+            };
+            println!("Running day {day:02}");
+            let day_duration = main_run(&args)?;
+            total_duration += day_duration;
+        }
     }
     println!("{:=>40}", "");
     println!("Total duration: {total_duration:.3?}");

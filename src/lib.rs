@@ -7,7 +7,8 @@ pub mod heap;
 pub mod map2d;
 pub mod math;
 pub mod parsing;
-pub mod solutions;
+pub mod sol2024;
+pub mod sol2025;
 pub mod trie;
 pub mod vec2;
 

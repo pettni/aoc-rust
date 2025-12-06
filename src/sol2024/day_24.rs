@@ -61,7 +61,7 @@ impl<'a> Transition<'a> {
     }
 }
 
-fn parse(input: &str) -> (Vec<Init>, Vec<Transition>) {
+fn parse(input: &str) -> (Vec<Init<'_>>, Vec<Transition<'_>>) {
     let mut line_spl = input.trim().split("\n\n");
     let init = line_spl
         .next()
