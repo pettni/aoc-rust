@@ -24,6 +24,7 @@ enum Commands {
 
 #[derive(Parser)]
 struct RunArgs {
+    #[arg(short, long, default_value="2025")]
     pub year: u32,
     #[arg(short, long, default_value=None)]
     pub day: u32,
@@ -92,7 +93,7 @@ fn main_run(args: &RunArgs) -> Result<Duration, Box<dyn std::error::Error>> {
     let path: PathBuf = args
         .input
         .clone()
-        .unwrap_or_else(|| get_default_data_path(args.day));
+        .unwrap_or_else(|| get_default_data_path(args.year, args.day));
     let data =
         fs::read_to_string(&path).unwrap_or_else(|_| panic!("Couldn't open file {:?}", path));
 

@@ -4,9 +4,7 @@ pub mod day_01;
 
 pub mod day_xx;
 
-pub const ALL: [Solutions; 1] = [
-    (day_01::part_a, day_01::part_b),
-];
+pub const ALL: [Solutions; 1] = [(day_01::part_a, day_01::part_b)];
 
 #[cfg(test)]
 mod tests {
@@ -18,7 +16,7 @@ mod tests {
 
     #[rustfmt::skip]
     const ANSWERS: [(Answer, Answer); 1] = [
-        /* day 01 */ (Answer::Unimplemented, Answer::Unimplemented),
+        /* day 01 */ (Answer::Number(1195), Answer::Number(6770)),
     ];
 
     #[test]
@@ -29,7 +27,7 @@ mod tests {
                 .get(day.saturating_sub(1))
                 .unwrap_or_else(|| panic!("Invalid day {}", day));
 
-            let path: PathBuf = get_default_data_path(day as u32);
+            let path: PathBuf = get_default_data_path(2025, day as u32);
             let data = fs::read_to_string(&path)
                 .unwrap_or_else(|_| panic!("Couldn't open file {:?}", path));
 

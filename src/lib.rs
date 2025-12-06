@@ -32,6 +32,6 @@ impl fmt::Display for Answer {
 
 pub type Solutions = (fn(&str) -> Answer, fn(&str) -> Answer);
 
-pub fn get_default_data_path(day: u32) -> PathBuf {
-    PathBuf::from(format!("data/{:02}.txt", day))
+pub fn get_default_data_path(year: u32, day: u32) -> PathBuf {
+    PathBuf::from(format!("data_{}/{:02}.txt", year, day))
 }

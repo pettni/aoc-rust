@@ -1,6 +1,7 @@
 **/*.rs.bk
 .venv
 Cargo.lock
-data/
+data_2024/
+data_2025/
 debug/
 target/

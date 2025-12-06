@@ -101,7 +101,7 @@ mod tests {
                 .get(day.saturating_sub(1))
                 .unwrap_or_else(|| panic!("Invalid day {}", day));
 
-            let path: PathBuf = get_default_data_path(day as u32);
+            let path: PathBuf = get_default_data_path(2024, day as u32);
             let data = fs::read_to_string(&path)
                 .unwrap_or_else(|_| panic!("Couldn't open file {:?}", path));
 
