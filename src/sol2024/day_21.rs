@@ -50,6 +50,7 @@ impl KeypadButtons for DirButton {
             DirButton::Dir(Dir::W) => Vec2i { x: 0, y: 1 },
             DirButton::Dir(Dir::S) => Vec2i { x: 1, y: 1 },
             DirButton::Dir(Dir::E) => Vec2i { x: 2, y: 1 },
+            DirButton::Dir(_) => unreachable!("Invalid direction"),
         }
     }
 }

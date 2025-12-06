@@ -44,6 +44,7 @@ fn cost_to_go((pos, dir): (Vec2i, Dir), end: Vec2i) -> i64 {
         Dir::E => linear + 1000,
         Dir::S => linear + 2000,
         Dir::W => linear + 2000,
+        _ => unreachable!("Invalid direction"),
     }
 }
 

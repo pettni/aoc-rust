@@ -7,9 +7,24 @@ pub enum Dir {
     E = 1,
     S = 2,
     W = 3,
+    NW = 4,
+    NE = 5,
+    SW = 6,
+    SE = 7,
 }
 
 pub const DIRECTIONS: [Dir; 4] = [Dir::N, Dir::E, Dir::S, Dir::W];
+
+pub const DIRECTIONS8: [Dir; 8] = [
+    Dir::N,
+    Dir::NE,
+    Dir::E,
+    Dir::SE,
+    Dir::S,
+    Dir::SW,
+    Dir::W,
+    Dir::NW,
+];
 
 impl Dir {
     pub fn from_char(c: char) -> Option<Self> {
@@ -28,6 +43,10 @@ impl Dir {
             Dir::E => Dir::S,
             Dir::S => Dir::W,
             Dir::W => Dir::N,
+            Dir::NE => Dir::SE,
+            Dir::SE => Dir::SW,
+            Dir::SW => Dir::NW,
+            Dir::NW => Dir::NE,
         }
     }
 
@@ -37,6 +56,10 @@ impl Dir {
             Dir::E => Dir::N,
             Dir::S => Dir::E,
             Dir::W => Dir::S,
+            Dir::NE => Dir::NW,
+            Dir::SE => Dir::NE,
+            Dir::SW => Dir::SE,
+            Dir::NW => Dir::SW,
         }
     }
 
@@ -46,6 +69,10 @@ impl Dir {
             Dir::E => Dir::W,
             Dir::S => Dir::N,
             Dir::W => Dir::E,
+            Dir::NE => Dir::SW,
+            Dir::SE => Dir::NW,
+            Dir::SW => Dir::NE,
+            Dir::NW => Dir::SE,
         }
     }
 }
@@ -78,6 +105,10 @@ impl Vec2i {
             Dir::E => (d, 0),
             Dir::S => (0, d),
             Dir::W => (-d, 0),
+            Dir::NE => (d, -d),
+            Dir::SE => (d, d),
+            Dir::SW => (-d, d),
+            Dir::NW => (-d, -d),
         };
         Self::new(self.x + dx, self.y + dy)
     }
