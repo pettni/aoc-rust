@@ -45,24 +45,22 @@ impl Step {
     }
 }
 
-fn parse(input: &str) -> Vec<Step> {
-    input.lines().map(Step::from_str).collect::<Vec<_>>()
-}
-
-
 pub fn part_a(input: &str) -> Answer {
-    let folder = |(zero_cnt, pos): (i64, i64), step: &Step| -> (i64, i64) {
+    let folder = |(zero_cnt, pos): (i64, i64), step: Step| -> (i64, i64) {
         let new_pos = step.step(pos).rem_euclid(MODULO as i64);
         let hit_zero = new_pos == 0;
         (zero_cnt + hit_zero as i64, new_pos)
     };
 
-    let (answer, _) = parse(input).iter().fold((0, START_POS), folder);
+    let (answer, _) = input
+        .lines()
+        .map(Step::from_str)
+        .fold((0, START_POS), folder);
     Answer::Number(answer)
 }
 
 pub fn part_b(input: &str) -> Answer {
-    let folder = |(zero_cnt, pos): (i64, i64), step: &Step| -> (i64, i64) {
+    let folder = |(zero_cnt, pos): (i64, i64), step: Step| -> (i64, i64) {
         let new_pos = step.step(pos);
         let pass_zero = pos > 0 && (new_pos <= 0 || new_pos >= MODULO as i64);
         (
@@ -71,7 +69,10 @@ pub fn part_b(input: &str) -> Answer {
         )
     };
 
-    let (answer, _) = parse(input).iter().fold((0, START_POS), folder);
+    let (answer, _) = input
+        .lines()
+        .map(Step::from_str)
+        .fold((0, START_POS), folder);
     Answer::Number(answer)
 }
 

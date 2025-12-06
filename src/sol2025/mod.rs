@@ -1,10 +1,14 @@
 use crate::Solutions;
 
 pub mod day_01;
+pub mod day_02;
 
 pub mod day_xx;
 
-pub const ALL: [Solutions; 1] = [(day_01::part_a, day_01::part_b)];
+pub const ALL: [Solutions; 2] = [
+    (day_01::part_a, day_01::part_b),
+    (day_02::part_a, day_02::part_b),
+];
 
 #[cfg(test)]
 mod tests {
@@ -15,8 +19,9 @@ mod tests {
     use crate::Answer;
 
     #[rustfmt::skip]
-    const ANSWERS: [(Answer, Answer); 1] = [
+    const ANSWERS: [(Answer, Answer); 2] = [
         /* day 01 */ (Answer::Number(1195), Answer::Number(6770)),
+        /* day 02 */ (Answer::Number(16793817782), Answer::Unimplemented),
     ];
 
     #[test]
