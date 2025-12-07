@@ -1,10 +1,18 @@
 use nom::{
-    character::complete::{anychar, digit1, multispace0, newline, not_line_ending, space0, space1},
+    bytes::complete::take_till1,
+    character::complete::{
+        anychar, digit1, multispace0, newline, not_line_ending, space0, space1,
+    },
     combinator::{all_consuming, complete, map_parser, map_res, verify},
     multi::{many1, separated_list1},
     sequence::{delimited, preceded},
     IResult,
 };
+
+/// Any non-space character
+pub fn non_space(input: &str) -> IResult<&str, &str> {
+    take_till1(char::is_whitespace)(input)
+}
 
 /// Parse a character and transform it with a function.
 pub fn parse_char<'a, T>(
@@ -44,15 +52,32 @@ pub fn parse_matrix<'a, T>(
     parser(input)
 }
 
-/// Parse rows as numbers.
-pub fn parse_rows_of_ints(input: &str) -> IResult<&str, Vec<Vec<i64>>> {
-    let row_parser = map_parser(
+/// Parse space-delimited line as something.
+pub fn parse_row_of_x<'a, T>(
+    input: &'a str,
+    f: &dyn Fn(&'a str) -> Result<T, String>,
+) -> IResult<&'a str, Vec<T>> {
+    let mut row_parser = map_parser(
+        preceded(space0, not_line_ending),
+        separated_list1(space1, map_res(non_space, f)),
+    );
+    row_parser(input)
+}
+
+/// Parse space-delimited line as numbers.
+pub fn parse_row_of_ints(input: &str) -> IResult<&str, Vec<i64>> {
+    let mut row_parser = map_parser(
         preceded(space0, not_line_ending),
         separated_list1(space1, map_res(digit1, str::parse::<i64>)),
     );
+    row_parser(input)
+}
+
+/// Parse space-delimited lines as numbers.
+pub fn parse_rows_of_ints(input: &str) -> IResult<&str, Vec<Vec<i64>>> {
     let mut rows_parser = complete(delimited(
         multispace0,
-        separated_list1(newline, row_parser),
+        separated_list1(newline, |x| parse_row_of_ints(x)),
         multispace0,
     ));
     rows_parser(input)
@@ -215,5 +240,47 @@ mod tests {
             .skip(1)
             .step_by(2)
             .all(|x| *x == CellValue::Free));
+    }
+
+    #[test]
+    fn test_parse_row_of_x() {
+        let data = "* + -";
+        let result = parse_row_of_x(data, &|p: &str| -> Result<char, String> {
+            match p {
+                "*" => Ok('*'),
+                "+" => Ok('+'),
+                "-" => Ok('-'),
+                _ => Err("Invalid symbol".to_string()),
+            }
+        });
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().1, vec!['*', '+', '-'],);
+    }
+
+    #[test]
+    fn test_parse_row_of_ints() {
+        let data = "1  34  21  2  212";
+        let result = parse_row_of_ints(data);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().1, vec![1, 34, 21, 2, 212],);
+    }
+
+    #[test]
+    fn test_parse_rows_of_ints() {
+        let data = r#"
+        1  34  21  2  212
+        1  34  21  2  212
+        1  34  21  2  212
+        "#;
+        let result = parse_rows_of_ints(data);
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap().1,
+            vec![
+                vec![1, 34, 21, 2, 212],
+                vec![1, 34, 21, 2, 212],
+                vec![1, 34, 21, 2, 212],
+            ],
+        );
     }
 }
