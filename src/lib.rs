@@ -11,6 +11,8 @@ pub mod sol2024;
 pub mod sol2025;
 pub mod trie;
 pub mod vec2;
+pub mod vector;
+pub mod dsa;
 
 #[derive(Debug, PartialEq, Default)]
 pub enum Answer {

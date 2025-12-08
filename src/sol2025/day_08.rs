@@ -1,83 +1,78 @@
+use std::cmp::Ordering;
+
+use crate::dsa::Dsa;
+use crate::heap::MinHeap;
+use crate::vector::Vec3i;
 use crate::Answer;
-use num_traits::Num;
-use std::ops::{Index, IndexMut};
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Ord, PartialOrd)]
-pub struct Vector<const N: usize, T: Num + Copy> {
-    data: [T; N],
-}
+type HeapEl = (usize, usize, i64);
 
-type Vec3<T> = Vector<3, T>;
-
-impl<T: Num + Copy> Vec3<T> {
-    pub const fn new(x: T, y: T, z: T) -> Self {
-        Vec3::<T> { data: [x, y, z] }
-    }
-}
-
-type Vec3i = Vec3<i64>;
-
-impl<const N: usize, T: Num + Copy> Vector<N, T> {
-    #[inline]
-    pub fn zero() -> Self {
-        Self {
-            data: [T::zero(); N],
-        }
-    }
-    pub fn ones() -> Self {
-        Self {
-            data: [T::one(); N],
-        }
-    }
-    pub fn ones() -> Self {
-        Self {
-            data: [T::one(); N],
-        }
-    }
-}
-
-impl<const N: usize, T: Num + Copy> Index<usize> for Vector<N, T> {
-    type Output = T;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]
-    }
-}
-
-impl<const N: usize, T: Num + Copy> IndexMut<usize> for Vector<N, T> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.data[index]
-    }
-}
-
-impl<const N: usize, T: Num + Copy> FromIterator<T> for Vector<N, T> {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let mut ret = Self::zero();
-        for (i, x) in iter.enumerate() {
-            ret[i] = x;
-        }
-        ret
-    }
-}
-
-pub fn part_a(input: &str) -> Answer {
+fn common(
+    input: &str,
+) -> (
+    Vec<Vec3i>,
+    MinHeap<HeapEl, impl Fn(&HeapEl, &HeapEl) -> Ordering>,
+) {
     let vs = input
         .lines()
         .map(|line| {
-            let mut ns = line.split(',').map(|x| x.parse::<i64>().unwrap());
-            let x = ns.next().unwrap();
-            let y = ns.next().unwrap();
-            let z = ns.next().unwrap();
-            Vec3i::new(x, y, z)
+            line.split(',')
+                .map(|x| x.parse::<i64>().unwrap())
+                .collect::<Vec3i>()
         })
         .collect::<Vec<_>>();
-    println!("{:?}", vs);
-    Answer::default()
+
+    let n = vs.len();
+
+    let mut ds =
+        MinHeap::with_capacity(n * (n + 1) / 2, |p1: &HeapEl, p2: &HeapEl| p1.2.cmp(&p2.2));
+    for i1 in 0..n {
+        for i2 in i1 + 1..n {
+            ds.push((i1, i2, vs[i1].dist_sq(&vs[i2])))
+        }
+    }
+
+    (vs, ds)
+}
+
+fn solve_part_a(input: &str, num_connections: usize) -> Answer {
+    let (vs, mut ds) = common(input);
+    let n = vs.len();
+
+    let mut dsa = Dsa::new(n);
+
+    for _ in 0..num_connections {
+        if let Some((i1, i2, _)) = ds.pop() {
+            dsa.merge(i1, i2);
+        }
+    }
+
+    let mut circuit_sizes = dsa.sizes().map(|(_, s)| s).collect::<Vec<_>>();
+    circuit_sizes.sort();
+    let result = circuit_sizes.iter().rev().take(3).product::<usize>();
+
+    Answer::Number(result as i64)
+}
+
+pub fn part_a(input: &str) -> Answer {
+    solve_part_a(input, 1000)
 }
 
 pub fn part_b(input: &str) -> Answer {
-    let _ = input;
-    Answer::default()
+    let (vs, mut ds) = common(input);
+    let n = vs.len();
+
+    let mut dsa = Dsa::new(n);
+
+    while let Some((i1, i2, _)) = ds.pop() {
+        dsa.merge(i1, i2);
+        if dsa.len() == 1 {
+            let result = vs[i1].x() * vs[i2].x();
+            return Answer::Number(result);
+        }
+    }
+
+    unreachable!("Not connected");
 }
 
 #[cfg(test)]
@@ -110,13 +105,13 @@ mod tests {
 
     #[test]
     fn test_part_a() {
-        let result = part_a(TEST_INPUT);
+        let result = solve_part_a(TEST_INPUT, 10);
         assert_eq!(result, Answer::Number(40));
     }
 
     #[test]
     fn test_part_b() {
         let result = part_b(TEST_INPUT);
-        assert_eq!(result, Answer::Unimplemented);
+        assert_eq!(result, Answer::Number(25272));
     }
 }
