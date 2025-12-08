@@ -12,6 +12,7 @@ itertools = "0.13.0"
 nom = "7"
 rayon = "1.10.0"
 rustc-hash = "2.1.0"
+num-traits = "0.2"
 
 [profile.dhat]
 inherits = "release"
