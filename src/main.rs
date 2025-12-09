@@ -38,6 +38,8 @@ struct RunArgs {
 struct RunAllArgs {
     #[arg(long, short, action=ArgAction::SetTrue)]
     pub benchmark: bool,
+    #[arg(short, long, default_value=None)]
+    pub year: Option<u32>,
 }
 
 fn part_run(f: impl Fn(&str) -> Answer, input: &str, benchmark: bool) -> (Answer, Duration, u128) {
@@ -110,7 +112,9 @@ fn main_run(args: &RunArgs) -> Result<Duration, Box<dyn std::error::Error>> {
 
 fn main_run_all(args: &RunAllArgs) -> Result<(), Box<dyn std::error::Error>> {
     let mut total_duration: Duration = Duration::default();
-    for year in 2024..2025 + 1 {
+    let year_start = args.year.unwrap_or(2024);
+    let year_end = args.year.unwrap_or(2025) + 1;
+    for year in year_start..year_end {
         println!("====================================================");
         println!("Running year {year}");
         println!("====================================================");
