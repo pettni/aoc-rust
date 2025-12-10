@@ -1,5 +1,5 @@
 use crate::math::diophantine;
-use crate::{vec2::Vec2i, Answer};
+use crate::{vector::Vec2i, Answer};
 
 #[derive(Debug, PartialEq)]
 struct Problem {
@@ -12,7 +12,7 @@ fn parse_vec2i(input: &str, delimiter: &str) -> Vec2i {
     let mut parts = input.trim().split(": ").nth(1).unwrap().split(", ");
     let x = str::parse::<i64>(parts.next().unwrap().split(delimiter).nth(1).unwrap()).unwrap();
     let y = str::parse::<i64>(parts.next().unwrap().split(delimiter).nth(1).unwrap()).unwrap();
-    Vec2i { x, y }
+    Vec2i::new(x, y)
 }
 
 fn parse_problem(input: &str) -> Problem {
@@ -45,16 +45,20 @@ fn solve_problem(problem: &Problem) -> Option<i64> {
     //    [ay by] [nb]     [cy]
 
     // find all solutions (na + k u, nb0 + k v) of equation in x
-    let (na0, nb0, u, v) = diophantine(problem.button_a.x, problem.button_b.x, problem.price.x)?;
+    let (na0, nb0, u, v) = diophantine(
+        problem.button_a.x(),
+        problem.button_b.x(),
+        problem.price.x(),
+    )?;
 
     // substitute solutions into y equation
     // ay na + by nb = cy
     // ay (na0 + k u) + by (nb0 + k v) = cy
     // ay na0 + ay u k + by nb0 + by v k = cy
     // (ay u + by v) k = cy - ay na0 - by nb0
-    let ay = problem.button_a.y;
-    let by = problem.button_b.y;
-    let k_num = problem.price.y - ay * na0 - by * nb0;
+    let ay = problem.button_a.y();
+    let by = problem.button_b.y();
+    let k_num = problem.price.y() - ay * na0 - by * nb0;
     let k_denom = ay * u + by * v;
 
     match k_denom {

@@ -1,6 +1,7 @@
+use crate::dir::Dir;
 use crate::map2d::Map;
 use crate::math::{dot, nchoosek_iter};
-use crate::vec2::{Dir, Vec2i};
+use crate::vector::Vec2i;
 use crate::Answer;
 use std::collections::HashMap;
 
@@ -26,12 +27,9 @@ impl NumButton {
 impl KeypadButtons for NumButton {
     fn to_coord(d: NumButton) -> Vec2i {
         match d {
-            NumButton::A => Vec2i { x: 2, y: 3 },
-            NumButton::Digit(0) => Vec2i { x: 1, y: 3 },
-            NumButton::Digit(d) => Vec2i {
-                x: ((d as i64 - 1) % 3),
-                y: 2 - (d as i64 - 1) / 3,
-            },
+            NumButton::A => Vec2i::new(2, 3),
+            NumButton::Digit(0) => Vec2i::new(1, 3),
+            NumButton::Digit(d) => Vec2i::new((d as i64 - 1) % 3, 2 - (d as i64 - 1) / 3),
         }
     }
 }
@@ -45,11 +43,11 @@ enum DirButton {
 impl KeypadButtons for DirButton {
     fn to_coord(d: DirButton) -> Vec2i {
         match d {
-            DirButton::A => Vec2i { x: 2, y: 0 },
-            DirButton::Dir(Dir::N) => Vec2i { x: 1, y: 0 },
-            DirButton::Dir(Dir::W) => Vec2i { x: 0, y: 1 },
-            DirButton::Dir(Dir::S) => Vec2i { x: 1, y: 1 },
-            DirButton::Dir(Dir::E) => Vec2i { x: 2, y: 1 },
+            DirButton::A => Vec2i::new(2, 0),
+            DirButton::Dir(Dir::N) => Vec2i::new(1, 0),
+            DirButton::Dir(Dir::W) => Vec2i::new(0, 1),
+            DirButton::Dir(Dir::S) => Vec2i::new(1, 1),
+            DirButton::Dir(Dir::E) => Vec2i::new(2, 1),
             DirButton::Dir(_) => unreachable!("Invalid direction"),
         }
     }
@@ -132,7 +130,9 @@ fn plan_motion<T: Copy + KeypadButtons>(
     let mut cur_pos = T::to_coord(init);
     let mut results: Vec<Vec<DirButton>> = vec![vec![]];
     for output in desired_output.iter() {
-        let Vec2i { x: dx, y: dy } = T::to_coord(*output) - cur_pos;
+        let vec2i = T::to_coord(*output) - cur_pos;
+        let dx = vec2i.x();
+        let dy = vec2i.y();
         let dx_unit = DirButton::Dir(if dx < 0 { Dir::W } else { Dir::E });
         let dy_unit = DirButton::Dir(if dy < 0 { Dir::N } else { Dir::S });
         results = results
@@ -159,7 +159,7 @@ fn plan_motion<T: Copy + KeypadButtons>(
                 ret
             })
             .collect();
-        cur_pos += &Vec2i { x: dx, y: dy };
+        cur_pos += Vec2i::new(dx, dy);
     }
 
     results

@@ -1,5 +1,6 @@
+use crate::dir::DIRECTIONS8;
 use crate::map2d::Map;
-use crate::vec2::{Vec2i, DIRECTIONS8};
+use crate::vector::Vec2i;
 use crate::Answer;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -40,7 +41,10 @@ fn can_remove(map: &Map<Tile>, pos: Vec2i) -> bool {
 
 pub fn part_a(input: &str) -> Answer {
     let map = Map::from_lines(input.lines(), &Tile::from_char);
-    let response = map.iter_coords().filter(|pos| can_remove(&map, *pos)).count();
+    let response = map
+        .iter_coords()
+        .filter(|pos| can_remove(&map, *pos))
+        .count();
     Answer::Number(response as i64)
 }
 

@@ -1,5 +1,6 @@
+use crate::dir::DIRECTIONS;
 use crate::map2d::Map;
-use crate::vec2::{Vec2i, DIRECTIONS};
+use crate::vector::Vec2i;
 use crate::Answer;
 use rayon::prelude::*;
 use std::collections::VecDeque;
@@ -60,11 +61,7 @@ fn solve<const PAR: bool>(input: &str, cheat_duration: i32, cheat_count_limit: u
     let nominal_cost = costmap_fwd[&end];
 
     let calc_cost_saving = |fwd_cost: u32, p: &Vec2i, (dx, dy): (i32, i32)| -> Option<u32> {
-        let p_skip = *p
-            + Vec2i {
-                x: dx as i64,
-                y: dy as i64,
-            };
+        let p_skip = *p + Vec2i::new(dx as i64, dy as i64);
         let alternative_cost = fwd_cost
             .checked_add(dx.unsigned_abs() + dy.unsigned_abs())?
             .checked_add(*costmap_rev.get(&p_skip)?)?;

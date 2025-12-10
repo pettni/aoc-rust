@@ -1,8 +1,9 @@
 use crate::hash::{FxHashSet, FxHashSetBuilder};
 use std::fmt;
 
+use crate::dir::Dir;
 use crate::map2d::Map;
-use crate::vec2::{Dir, Vec2i};
+use crate::vector::Vec2i;
 use crate::Answer;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -93,7 +94,7 @@ fn solve<const PARTA: bool>(input: &str) -> Answer {
     let result = map
         .iter()
         .filter_map(|(c, v)| match v {
-            Tile::Box(BoxSide::L) => Some(100 * c.y + c.x),
+            Tile::Box(BoxSide::L) => Some(100 * c.y() + c.x()),
             _ => None,
         })
         .sum();

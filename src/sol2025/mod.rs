@@ -8,10 +8,11 @@ pub mod day_05;
 pub mod day_06;
 pub mod day_07;
 pub mod day_08;
+pub mod day_09;
 
 pub mod day_xx;
 
-pub const ALL: [Solutions; 8] = [
+pub const ALL: [Solutions; 9] = [
     (day_01::part_a, day_01::part_b),
     (day_02::part_a, day_02::part_b),
     (day_03::part_a, day_03::part_b),
@@ -20,6 +21,7 @@ pub const ALL: [Solutions; 8] = [
     (day_06::part_a, day_06::part_b),
     (day_07::part_a, day_07::part_b),
     (day_08::part_a, day_08::part_b),
+    (day_09::part_a, day_09::part_b),
 ];
 
 #[cfg(test)]
@@ -31,7 +33,7 @@ mod tests {
     use crate::Answer;
 
     #[rustfmt::skip]
-    const ANSWERS: [(Answer, Answer); 8] = [
+    const ANSWERS: [(Answer, Answer); 9] = [
         /* day 01 */ (Answer::Number(1195), Answer::Number(6770)),
         /* day 02 */ (Answer::Number(16793817782), Answer::Number(27469417404)),
         /* day 03 */ (Answer::Number(17443), Answer::Number(172167155440541)),
@@ -40,6 +42,7 @@ mod tests {
         /* day 06 */ (Answer::Number(8108520669952), Answer::Number(11708563470209)),
         /* day 07 */ (Answer::Number(1541), Answer::Number(80158285728929)),
         /* day 08 */ (Answer::Number(135169), Answer::Number(302133440)),
+        /* day 09 */ (Answer::Number(4773451098), Answer::Number(1429075575)),
     ];
 
     #[test]

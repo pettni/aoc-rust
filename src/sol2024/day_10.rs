@@ -1,5 +1,6 @@
+use crate::dir::Dir;
 use crate::map2d::Map;
-use crate::vec2::{Dir, Vec2i};
+use crate::vector::Vec2i;
 use crate::Answer;
 use bitvec::prelude::*;
 

@@ -4,7 +4,7 @@ use crate::Answer;
 fn count_cols(map: &Map<char>) -> Vec<u32> {
     let mut ret = vec![0; map.w];
     for (c, _) in map.iter().filter(|(_, v)| **v == '#') {
-        ret[c.x as usize] += 1;
+        ret[c.x() as usize] += 1;
     }
     ret
 }

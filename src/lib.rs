@@ -2,6 +2,8 @@ use std::fmt;
 use std::path::PathBuf;
 
 pub mod container;
+pub mod dir;
+pub mod dsa;
 pub mod hash;
 pub mod heap;
 pub mod map2d;
@@ -10,9 +12,7 @@ pub mod parsing;
 pub mod sol2024;
 pub mod sol2025;
 pub mod trie;
-pub mod vec2;
 pub mod vector;
-pub mod dsa;
 
 #[derive(Debug, PartialEq, Default)]
 pub enum Answer {

@@ -1,6 +1,6 @@
 use crate::map2d::Map;
 use crate::math::crt2;
-use crate::{vec2::Vec2i, Answer};
+use crate::{vector::Vec2i, Answer};
 
 const H: usize = 103;
 const W: usize = 101;
@@ -15,7 +15,7 @@ fn parse_vec2(data: &str) -> Vec2i {
     let mut parts = data.split(",");
     let x = parts.next().map(str::parse::<i64>).unwrap().unwrap();
     let y = parts.next().map(str::parse::<i64>).unwrap().unwrap();
-    Vec2i { x, y }
+    Vec2i::new(x, y)
 }
 
 fn parse_robot(line: &str) -> Robot {
@@ -31,8 +31,8 @@ fn parse_robot(line: &str) -> Robot {
 
 fn simulate_robot(p: Vec2i, v: Vec2i, h: usize, w: usize, t: usize) -> Vec2i {
     let mut pn = p + v * t as i64;
-    pn.x = pn.x.rem_euclid(w as i64);
-    pn.y = pn.y.rem_euclid(h as i64);
+    *pn.x_mut() = pn.x().rem_euclid(w as i64);
+    *pn.y_mut() = pn.y().rem_euclid(h as i64);
     pn
 }
 
@@ -43,10 +43,10 @@ fn solve_part_a(input: &str, h: usize, w: usize) -> Answer {
     let mut n_bl = 0;
     for robot in input.trim().lines().map(parse_robot) {
         let new_pos = simulate_robot(robot.p, robot.v, h, w, 100);
-        let top = new_pos.y < h as i64 / 2;
-        let bot = new_pos.y > h as i64 / 2;
-        let left = new_pos.x < w as i64 / 2;
-        let rght = new_pos.x > w as i64 / 2;
+        let top = new_pos.y() < h as i64 / 2;
+        let bot = new_pos.y() > h as i64 / 2;
+        let left = new_pos.x() < w as i64 / 2;
+        let rght = new_pos.x() > w as i64 / 2;
         if top & left {
             n_tl += 1;
         } else if top & rght {

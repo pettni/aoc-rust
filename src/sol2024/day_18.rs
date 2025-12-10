@@ -1,20 +1,15 @@
 use std::collections::VecDeque;
 
+use crate::dir::{Dir, DIRECTIONS};
 use crate::map2d::Map;
-use crate::vec2::{Dir, Vec2i, DIRECTIONS};
+use crate::vector::Vec2i;
 use crate::Answer;
 
 fn parse(input: &str) -> Vec<Vec2i> {
     input
         .trim()
         .lines()
-        .map(|l| {
-            let mut x = l.split(",").flat_map(str::parse::<i64>);
-            Vec2i {
-                x: x.next().unwrap(),
-                y: x.next().unwrap(),
-            }
-        })
+        .map(|l| l.split(",").flat_map(str::parse::<i64>).collect::<Vec2i>())
         .collect::<Vec<_>>()
 }
 
@@ -27,7 +22,7 @@ fn solve_part_a(input: &str, h: usize, w: usize, n: usize) -> Answer {
     let mut queue = VecDeque::new();
     let mut costmap = map.same_size_with(u64::MAX);
 
-    queue.push_back((Vec2i { x: 0, y: 0 }, 0));
+    queue.push_back((Vec2i::zero(), 0));
     run_bfs(&map, &mut queue, &mut costmap);
 
     Answer::Number(costmap[(h - 1, w - 1)] as i64)
@@ -46,7 +41,7 @@ fn run_bfs(map: &Map<char>, queue: &mut VecDeque<(Vec2i, u64)>, costmap: &mut Ma
             continue;
         }
         costmap[&cur] = cost;
-        if cur.x == map.w as i64 - 1 && cur.y == map.h as i64 - 1 {
+        if cur.x() == map.w as i64 - 1 && cur.y() == map.h as i64 - 1 {
             break;
         }
 
@@ -70,7 +65,7 @@ fn solve_part_b(input: &str, h: usize, w: usize, n: usize) -> Answer {
     let mut costmap: Map<u64> = map.same_size_with(u64::MAX);
 
     // compute initial costmap
-    inc_queue.push_back((Vec2i { x: 0, y: 0 }, 0));
+    inc_queue.push_back((Vec2i::zero(), 0));
     run_bfs(&map, &mut inc_queue, &mut costmap);
 
     // for each new obstacle make an incremental costmap update
@@ -119,7 +114,7 @@ fn solve_part_b(input: &str, h: usize, w: usize, n: usize) -> Answer {
         run_bfs(&map, &mut inc_queue, &mut costmap);
 
         if costmap[(h - 1, w - 1)] == u64::MAX {
-            return Answer::String(format!("{},{}", p.x, p.y).leak::<'static>());
+            return Answer::String(format!("{},{}", p.x(), p.y()).leak::<'static>());
         }
     }
 

@@ -24,7 +24,7 @@ enum Commands {
 
 #[derive(Parser)]
 struct RunArgs {
-    #[arg(short, long, default_value="2025")]
+    #[arg(short, long, default_value = "2025")]
     pub year: u32,
     #[arg(short, long, default_value=None)]
     pub day: u32,
@@ -61,8 +61,7 @@ fn part_run(f: impl Fn(&str) -> Answer, input: &str, benchmark: bool) -> (Answer
             black_box(f(black_box(input)));
             timers.push(t0.elapsed());
         }
-        let dt_nanos = timers.iter().map(|d| d.as_nanos()).sum::<u128>() / timers.len() as u128;
-        let dt = Duration::from_nanos(dt_nanos as u64);
+        let dt = timers.iter().sum::<Duration>() / timers.len() as u32;
         (answer, dt, n)
     }
 }

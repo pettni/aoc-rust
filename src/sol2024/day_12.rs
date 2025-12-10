@@ -1,8 +1,9 @@
 use std::iter::successors;
 
+use crate::dir::Dir;
 use crate::hash::{FxHashSet, FxHashSetBuilder};
 use crate::map2d::Map;
-use crate::vec2::{Dir, Vec2i};
+use crate::vector::Vec2i;
 use crate::Answer;
 
 type PosDir = (Vec2i, Dir);

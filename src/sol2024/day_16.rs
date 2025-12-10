@@ -1,6 +1,7 @@
 use crate::container::BucketQueue;
+use crate::dir::Dir;
 use crate::map2d::Map;
-use crate::vec2::{Dir, Vec2i};
+use crate::vector::Vec2i;
 use crate::Answer;
 use std::collections::VecDeque;
 
@@ -33,10 +34,10 @@ pub fn part_b(input: &str) -> Answer {
 fn cost_to_go((pos, dir): (Vec2i, Dir), end: Vec2i) -> i64 {
     let linear = pos.manhattan_dist(&end) as i64;
     let dp = end - pos;
-    if dp.x == 0 && dir == Dir::N {
+    if dp.x() == 0 && dir == Dir::N {
         return linear;
     }
-    if dp.y == 0 && dir == Dir::E {
+    if dp.y() == 0 && dir == Dir::E {
         return linear;
     }
     match dir {

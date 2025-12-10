@@ -1,5 +1,5 @@
 use crate::hash::{FxHashMap, FxHashMapBuilder};
-use crate::vec2::Vec2i;
+use crate::vector::Vec2i;
 use crate::{math::gcd, Answer};
 use itertools::Itertools;
 
@@ -54,7 +54,7 @@ fn find_antinodes<const PARTA: bool>(group: &[Vec2i], h: usize, w: usize) -> Vec
         pairs_iter
             .flat_map(|(p, q)| {
                 let mut dp = *p - *q;
-                let t = gcd(dp.x.unsigned_abs(), dp.y.unsigned_abs()) as i64;
+                let t = gcd(dp.x().unsigned_abs(), dp.y().unsigned_abs()) as i64;
                 dp /= t;
                 (0..)
                     .map(move |k| -> Vec2i { *p + dp * k })

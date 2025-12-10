@@ -1,4 +1,5 @@
-use crate::vec2::{Dir, Vec2i};
+use crate::dir::Dir;
+use crate::vector::Vec2i;
 use std::{
     fmt,
     ops::{Index, IndexMut},
@@ -116,12 +117,7 @@ impl<T> Map<T> {
     pub fn iter_coords(&self) -> impl Iterator<Item = Vec2i> {
         let h = self.h;
         let w = self.w;
-        (0..h).flat_map(move |r| {
-            (0..w).map(move |c| Vec2i {
-                x: c as i64,
-                y: r as i64,
-            })
-        })
+        (0..h).flat_map(move |r| (0..w).map(move |c| Vec2i::new(c as i64, r as i64)))
     }
 
     /// Iterate over (coord, val) pairs.
@@ -226,11 +222,11 @@ mod tests {
         assert_eq!(map.h, 3);
         assert_eq!(map.w, 4);
 
-        let p = Vec2i { x: 1, y: 0 };
+        let p = Vec2i::new(1, 0);
         assert_eq!(map[&p], 2);
         assert_eq!(map[(0, 1)], 2);
 
-        let p = Vec2i { x: 0, y: 1 };
+        let p = Vec2i::new(0, 1);
         assert_eq!(map[&p], 5);
         assert_eq!(map[(1, 0)], 5);
     }
@@ -242,13 +238,7 @@ mod tests {
         for y in 0..3 {
             for x in 0..4 {
                 assert_eq!(map[(y, x)], data[y][x]);
-                assert_eq!(
-                    map[&Vec2i {
-                        x: x as i64,
-                        y: y as i64
-                    }],
-                    data[y][x]
-                );
+                assert_eq!(map[&Vec2i::new(x as i64, y as i64)], data[y][x]);
             }
             assert_eq!(map[y], data[y]);
         }
@@ -256,10 +246,10 @@ mod tests {
         // mutable indexing
         map[1][1] = 66;
         map[(1, 2)] = 77;
-        map[&Vec2i { x: 3, y: 1 }] = 88;
-        assert_eq!(map[&Vec2i { x: 1, y: 1 }], 66);
-        assert_eq!(map[&Vec2i { x: 2, y: 1 }], 77);
-        assert_eq!(map[&Vec2i { x: 3, y: 1 }], 88);
+        map[&Vec2i::new(3, 1)] = 88;
+        assert_eq!(map[&Vec2i::new(1, 1)], 66);
+        assert_eq!(map[&Vec2i::new(2, 1)], 77);
+        assert_eq!(map[&Vec2i::new(3, 1)], 88);
     }
 
     #[test]
@@ -267,16 +257,16 @@ mod tests {
         let data = vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8], vec![9, 10, 11, 12]];
         let map = Map::from_vecs(data);
 
-        let p = Vec2i { x: 2, y: 1 };
+        let p = Vec2i::new(2, 1);
         assert_eq!(*map.get(&p).unwrap(), 7);
 
-        let p = Vec2i { x: 0, y: -1 };
+        let p = Vec2i::new(0, -1);
         assert_eq!(map.get(&p), None);
 
-        let p = Vec2i { x: -1, y: 2 };
+        let p = Vec2i::new(-1, 2);
         assert_eq!(map.get(&p), None);
 
-        let p = Vec2i { x: 1, y: 10 };
+        let p = Vec2i::new(1, 10);
         assert_eq!(map.get(&p), None);
     }
 
@@ -289,7 +279,7 @@ mod tests {
 
         for i in 0..12 {
             let item = iter.next().unwrap();
-            assert_eq!(item.0, Vec2i { y: i / 4, x: i % 4 });
+            assert_eq!(item.0, Vec2i::new(i % 4, i / 4));
             assert_eq!(*item.1, i + 1);
         }
     }
