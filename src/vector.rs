@@ -51,6 +51,12 @@ impl<const N: usize, T: Scalar> Vector<N, T> {
 
 // Generic traits
 
+impl<const N: usize, T: Scalar> Default for Vector<N, T> {
+    fn default() -> Self {
+        Self::zero()
+    }
+}
+
 impl<const N: usize, T: Scalar> Index<usize> for Vector<N, T> {
     type Output = T;
     fn index(&self, index: usize) -> &Self::Output {
@@ -71,6 +77,21 @@ impl<const N: usize, T: Scalar> FromIterator<T> for Vector<N, T> {
             ret[idx] = x;
         }
         ret
+    }
+}
+
+impl<const N: usize, T: Scalar> Sum<Self> for Vector<N, T> {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::zero(), |a, b| a + b)
+    }
+}
+
+impl<'a, const N: usize, T: Scalar> Sum<&'a Self> for Vector<N, T> {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
+        iter.fold(Self::zero(), |mut a, b| {
+            a += *b;
+            a
+        })
     }
 }
 
