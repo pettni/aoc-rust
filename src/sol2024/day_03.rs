@@ -1,29 +1,29 @@
 use crate::Answer;
 use nom::{
+    IResult, Parser,
     branch::alt,
     bytes::complete::tag,
     character::complete::{anychar, digit1},
     combinator::{map, map_res},
-    multi::{many1, many_till},
+    multi::{many_till, many1},
     sequence::delimited,
-    IResult,
 };
 
 fn number_pair(input: &str) -> IResult<&str, (i64, i64)> {
     let mut number = map_res(digit1, str::parse::<i64>);
-    let (input, o1) = number(input)?;
+    let (input, o1) = number.parse(input)?;
     let (input, _) = tag(",")(input)?;
-    number(input).map(|(i, o2)| (i, (o1, o2)))
+    number.parse(input).map(|(i, o2)| (i, (o1, o2)))
 }
 
 fn mul_expr(input: &str) -> IResult<&str, (i64, i64)> {
     let mut pattern = delimited(tag("mul("), number_pair, tag(")"));
-    pattern(input)
+    pattern.parse(input)
 }
 
 fn mul_exprs(input: &str) -> IResult<&str, Vec<(i64, i64)>> {
     let take_one = map(many_till(anychar, mul_expr), |(_, y)| y);
-    many1(take_one)(input)
+    many1(take_one).parse(input)
 }
 
 pub fn part_a(input: &str) -> Answer {
@@ -49,7 +49,7 @@ fn token_parser(input: &str) -> IResult<&str, Vec<Token>> {
     let until_token = map(many_till(anychar, token), |(_, y)| y);
     let mut tokens = many1(until_token);
 
-    tokens(input)
+    tokens.parse(input)
 }
 
 pub fn part_b(input: &str) -> Answer {

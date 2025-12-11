@@ -1,18 +1,18 @@
 [package]
 name = "aoc"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-bitvec = "1.0.1"
-clap = { version = "4.5.21", features = ["derive"] }
-dhat = { version = "0.3.3", optional = true }
-indoc = "2.0.5"
-itertools = "0.13.0"
-nom = "7"
-rayon = "1.10.0"
-rustc-hash = "2.1.0"
-num-traits = "0.2"
+bit-vec = "0.*"
+clap = { version = "4.5.*", features = ["derive"] }
+dhat = { version = "0.3.*", optional = true }
+indoc = "2.0.*"
+itertools = "0.*"
+nom = "8"
+rayon = "1.*"
+rustc-hash = "2.*"
+num-traits = "0.*"
 
 [profile.dhat]
 inherits = "release"

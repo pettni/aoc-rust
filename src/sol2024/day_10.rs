@@ -2,13 +2,13 @@ use crate::dir::Dir;
 use crate::map2d::Map;
 use crate::vector::Vec2i;
 use crate::Answer;
-use bitvec::prelude::*;
+use bit_vec::BitVec;
 
 const DIRECTIONS: [Dir; 4] = [Dir::N, Dir::E, Dir::S, Dir::W];
 
 fn n_peaks_from_trailhead<const PARTB: bool>(trail_head: Vec2i, map: &Map<u32>) -> i64 {
     let mut stack = vec![trail_head];
-    let mut peaks = bitvec![0; map.h * map.w];
+    let mut peaks = BitVec::from_elem(map.h * map.w, false);
     let mut n_dist = 0;
 
     while let Some(cur) = stack.pop() {

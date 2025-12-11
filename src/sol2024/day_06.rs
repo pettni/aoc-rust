@@ -2,7 +2,7 @@ use crate::dir::Dir;
 use crate::map2d::Map;
 use crate::vector::Vec2i;
 use crate::Answer;
-use bitvec::prelude::*;
+use bit_vec::BitVec;
 use itertools::iproduct;
 use rayon::prelude::*;
 
@@ -67,7 +67,7 @@ pub fn part_a(input: &str) -> Answer {
     let (state_inner, map) = parse_board(&chars);
     let mut state: Option<State> = Some(state_inner);
 
-    let mut visited = bitvec![0; 130 * 130];
+    let mut visited = BitVec::from_elem(130 * 130, false);
 
     while let Some((pos, _)) = state {
         visited.set(pos.linear_idx(130), true);
@@ -93,7 +93,7 @@ fn quick_step(state: &State, map: &Map<Tile>, extra_obs: &Vec2i) -> Option<State
 
 fn has_loop(state0: &State, map: &Map<Tile>, extra_obs: &Vec2i) -> bool {
     let mut state: Option<State> = Some(*state0);
-    let mut visited = bitvec![0; 130 * 130 * 4];
+    let mut visited = BitVec::from_elem(130 * 130 * 4, false);
     while let Some((pos, dir)) = state {
         let state_idx = 4 * pos.linear_idx(130) + dir as usize;
         if visited[state_idx] {

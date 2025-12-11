@@ -1,10 +1,8 @@
 use crate::dir::Dir;
 use crate::vector::Vec2i;
-use std::{
-    fmt,
-    ops::{Index, IndexMut},
-    str::Lines,
-};
+use std::{fmt, str::Lines};
+
+pub use std::ops::{Index, IndexMut};
 
 /// 2D map type.
 ///
@@ -101,11 +99,7 @@ impl<T> Map<T> {
     /// Move in direction within map.
     pub fn step_within(&self, pos: &Vec2i, dir: Dir, d: isize) -> Option<Vec2i> {
         let new = pos.step(dir, d as i64);
-        if self.contains(&new) {
-            Some(new)
-        } else {
-            None
-        }
+        if self.contains(&new) { Some(new) } else { None }
     }
 
     /// Check if coordinate is within map bounds.
@@ -114,20 +108,30 @@ impl<T> Map<T> {
     }
 
     /// Iterate over coordinates.
-    pub fn iter_coords(&self) -> impl Iterator<Item = Vec2i> {
+    pub fn iter_coords(&self) -> impl Iterator<Item = Vec2i> + use<T> {
         let h = self.h;
         let w = self.w;
         (0..h).flat_map(move |r| (0..w).map(move |c| Vec2i::new(c as i64, r as i64)))
     }
 
-    /// Iterate over (coord, val) pairs.
-    pub fn iter(&self) -> impl Iterator<Item = (Vec2i, &T)> {
-        self.iter_coords().map(|c| (c, &self[&c]))
+    /// Iterate over map values.
+    pub fn iter_values(&self) -> impl Iterator<Item = &T> {
+        self.data.iter()
     }
 
-    /// Iterate over flattened map.
-    pub fn iter_values(&self) -> impl Iterator<Item = &T> {
-        self.iter_coords().map(|c| &self[&c])
+    /// Iterate over map values.
+    pub fn iter_values_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.data.iter_mut()
+    }
+
+    /// Iterate over (coord, val) pairs.
+    pub fn iter(&self) -> impl Iterator<Item = (Vec2i, &T)> {
+        self.iter_coords().zip(self.iter_values())
+    }
+
+    /// Iterate over (coord, val) pairs.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (Vec2i, &mut T)> {
+        self.iter_coords().zip(self.iter_values_mut())
     }
 
     /// Get map element.
@@ -275,12 +279,26 @@ mod tests {
         let data = vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8], vec![9, 10, 11, 12]];
         let map = Map::from_vecs(data);
 
-        let mut iter = map.iter();
-
-        for i in 0..12 {
-            let item = iter.next().unwrap();
-            assert_eq!(item.0, Vec2i::new(i % 4, i / 4));
-            assert_eq!(*item.1, i + 1);
+        for (i, (pos, val)) in map.iter().enumerate() {
+            assert_eq!(pos, Vec2i::new(i as i64 % 4, i as i64 / 4));
+            assert_eq!(*val, i + 1);
         }
+    }
+
+    #[test]
+    fn test_map_iter_mut() {
+        let data = vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8], vec![9, 10, 11, 12]];
+        let mut map = Map::from_vecs(data);
+
+        let key_pos = Vec2i::new(2, 1);
+        assert_eq!(map[&key_pos], 7);
+
+        for (pos, val) in map.iter_mut() {
+            if pos == key_pos {
+                *val = 100;
+            }
+        }
+
+        assert_eq!(map[&key_pos], 100);
     }
 }

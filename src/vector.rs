@@ -39,6 +39,14 @@ impl<const N: usize, T: Scalar> Vector<N, T> {
     pub fn dist_sq(&self, other: &Self) -> T {
         (*self - *other).norm_sq()
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.data.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.data.iter_mut()
+    }
 }
 
 // Generic traits

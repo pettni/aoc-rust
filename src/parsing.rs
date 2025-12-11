@@ -1,12 +1,10 @@
 use nom::{
+    IResult, Parser,
     bytes::complete::take_till1,
-    character::complete::{
-        anychar, digit1, multispace0, newline, not_line_ending, space0, space1,
-    },
+    character::complete::{anychar, digit1, multispace0, newline, not_line_ending, space0, space1},
     combinator::{all_consuming, complete, map_parser, map_res, verify},
     multi::{many1, separated_list1},
     sequence::{delimited, preceded},
-    IResult,
 };
 
 /// Any non-space character
@@ -19,7 +17,7 @@ pub fn parse_char<'a, T>(
     input: &'a str,
     f: &dyn Fn(char) -> Result<T, String>,
 ) -> IResult<&'a str, T> {
-    map_res(anychar, f)(input)
+    map_res(anychar, f).parse(input)
 }
 
 /// Parse non-empty string into a vector.
@@ -30,7 +28,7 @@ pub fn parse_vector<'a, T>(
     let line_as_str = verify(not_line_ending, |s: &str| !s.is_empty());
     let vec_of_t = map_parser(line_as_str, all_consuming(many1(|x| parse_char(x, f))));
     let mut parser = preceded(space0, vec_of_t); // ignore leading spaces
-    parser(input)
+    parser.parse(input)
 }
 
 /// Parse multi-line string into a 2D matrix.
@@ -39,7 +37,7 @@ pub fn parse_matrix_strict<'a, T>(
     f: &dyn Fn(char) -> Result<T, String>,
 ) -> IResult<&'a str, Vec<Vec<T>>> {
     let mut parser = separated_list1(newline, |x| parse_vector(x, f));
-    parser(input)
+    parser.parse(input)
 }
 
 /// Parse a multi-line string into a 2D matrix.
@@ -49,7 +47,7 @@ pub fn parse_matrix<'a, T>(
     f: &dyn Fn(char) -> Result<T, String>,
 ) -> IResult<&'a str, Vec<Vec<T>>> {
     let mut parser = delimited(multispace0, |x| parse_matrix_strict(x, f), multispace0);
-    parser(input)
+    parser.parse(input)
 }
 
 /// Parse space-delimited line as something.
@@ -61,7 +59,7 @@ pub fn parse_row_of_x<'a, T>(
         preceded(space0, not_line_ending),
         separated_list1(space1, map_res(non_space, f)),
     );
-    row_parser(input)
+    row_parser.parse(input)
 }
 
 /// Parse space-delimited line as numbers.
@@ -70,7 +68,7 @@ pub fn parse_row_of_ints(input: &str) -> IResult<&str, Vec<i64>> {
         preceded(space0, not_line_ending),
         separated_list1(space1, map_res(digit1, str::parse::<i64>)),
     );
-    row_parser(input)
+    row_parser.parse(input)
 }
 
 /// Parse space-delimited lines as numbers.
@@ -80,7 +78,7 @@ pub fn parse_rows_of_ints(input: &str) -> IResult<&str, Vec<Vec<i64>>> {
         separated_list1(newline, |x| parse_row_of_ints(x)),
         multispace0,
     ));
-    rows_parser(input)
+    rows_parser.parse(input)
 }
 
 /// Identity character parser.
@@ -231,15 +229,19 @@ mod tests {
         OXOXOX"#;
         let result = parse_matrix(matrix_str, &char_to_cellvalue);
         assert!(result.is_ok());
-        assert!(result.as_ref().unwrap().1[0]
-            .iter()
-            .step_by(2)
-            .all(|x| *x == CellValue::Occupied));
-        assert!(result.as_ref().unwrap().1[0]
-            .iter()
-            .skip(1)
-            .step_by(2)
-            .all(|x| *x == CellValue::Free));
+        assert!(
+            result.as_ref().unwrap().1[0]
+                .iter()
+                .step_by(2)
+                .all(|x| *x == CellValue::Occupied)
+        );
+        assert!(
+            result.as_ref().unwrap().1[0]
+                .iter()
+                .skip(1)
+                .step_by(2)
+                .all(|x| *x == CellValue::Free)
+        );
     }
 
     #[test]

@@ -1,7 +1,7 @@
+use crate::Answer;
 use crate::dir::DIRECTIONS8;
 use crate::map2d::Map;
 use crate::vector::Vec2i;
-use crate::Answer;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum Tile {
@@ -26,10 +26,10 @@ fn can_remove(map: &Map<Tile>, pos: Vec2i) -> bool {
             DIRECTIONS8
                 .iter()
                 .filter(|dir| {
-                    if let Some(x) = map.step_within(&pos, **dir, 1) {
-                        if map[&x] == Tile::Machine {
-                            return true;
-                        }
+                    if let Some(x) = map.step_within(&pos, **dir, 1)
+                        && map[&x] == Tile::Machine
+                    {
+                        return true;
                     }
                     false
                 })
