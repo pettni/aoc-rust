@@ -1,6 +1,5 @@
-use crate::Answer;
-use crate::map2d::Map;
-use bit_vec::BitVec;
+use crate::hash::{FxHashMap, FxHashMapBuilder};
+use crate::{Answer, vector::Vector};
 use nom::{
     IResult, Parser,
     bytes::complete::tag,
@@ -11,16 +10,18 @@ use nom::{
 };
 use rayon::prelude::*;
 
+type Scalar = i32;
+type Veci = Vector<13, Scalar>;
+
 #[derive(Debug, PartialEq, Clone)]
 struct Problem {
-    num_bulbs: usize,
-    target: Vec<usize>,
-    buttons: Vec<Vec<usize>>,
-    jolts: Vec<usize>,
+    target: Veci,
+    a_cols: Vec<Veci>,
+    jolts: Veci,
 }
 
-fn parse_numbers(input: &str) -> IResult<&str, Vec<usize>> {
-    let number = map_res(digit1, str::parse::<usize>);
+fn parse_numbers(input: &str) -> IResult<&str, Vec<i64>> {
+    let number = map_res(digit1, str::parse::<i64>);
     let mut numbers = separated_list1(one_of(","), number);
     numbers.parse(input)
 }
@@ -30,13 +31,13 @@ fn parse_target(input: &str) -> IResult<&str, Vec<char>> {
     target.parse(input)
 }
 
-fn parse_buttons(input: &str) -> IResult<&str, Vec<Vec<usize>>> {
+fn parse_buttons(input: &str) -> IResult<&str, Vec<Vec<i64>>> {
     let button = delimited(tag("("), parse_numbers, tag(")"));
     let mut buttons = separated_list1(space1, button);
     buttons.parse(input)
 }
 
-fn parse_jolts(input: &str) -> IResult<&str, Vec<usize>> {
+fn parse_jolts(input: &str) -> IResult<&str, Vec<i64>> {
     let mut jolts = delimited(tag("{"), parse_numbers, tag("}"));
     jolts.parse(input)
 }
@@ -48,126 +49,138 @@ fn parse_problem(input: &str) -> IResult<&str, Problem> {
     let (input, _) = space1(input)?;
     let (input, jolts) = parse_jolts(input)?;
 
-    let num_bulbs = target.len();
-    let target_idx = target
+    let target = target
         .iter()
-        .enumerate()
-        .flat_map(|(i, x)| match x {
-            '#' => Some(i),
-            _ => None,
+        .map(|x| match x {
+            '#' => 1,
+            _ => 0,
+        })
+        .collect::<Veci>();
+    let a_cols = buttons
+        .iter()
+        .map(|is| {
+            let mut ret = Veci::zero();
+            for i in is.iter() {
+                ret[*i as usize] = 1;
+            }
+            ret
         })
         .collect::<Vec<_>>();
 
     Ok((
         input,
         Problem {
-            num_bulbs,
-            target: target_idx,
-            buttons,
-            jolts,
+            target,
+            a_cols,
+            jolts: jolts.into_iter().map(|x| x as Scalar).collect::<Veci>(),
         },
     ))
 }
 
-fn to_bitvec(len: usize, ns: &[usize]) -> BitVec {
-    let mut ret = BitVec::from_elem(len, false);
-    for idx in ns.iter() {
-        ret.set(*idx, true);
-    }
-    ret
+// Find candidate 0/1 solutions to A x = b, where A \in {0, 1}
+fn get_children<const PARTA: bool>(
+    a_cols: &[Veci],
+    b: &Veci,
+) -> impl Iterator<Item = (Veci, Veci)> {
+    itertools::Itertools::powerset(a_cols.iter().enumerate()).flat_map(
+        |ivs: Vec<(usize, &Veci)>| {
+            if (0..b.len()).all(|i| {
+                let presses = ivs.iter().map(|iv| iv.1[i]).sum::<Scalar>();
+                if PARTA {
+                    presses % 2 == b[i]
+                } else {
+                    let b_rem = b[i] - presses;
+                    b_rem % 2 == 0 && b_rem >= 0
+                }
+            }) {
+                let mut x_bin = Veci::zero();
+                for i in ivs.iter().map(|iv| iv.0) {
+                    x_bin[i] = 1;
+                }
+                let b_half = (*b - matmul(a_cols, &x_bin)) / 2;
+                Some((x_bin, b_half))
+            } else {
+                None
+            }
+        },
+    )
 }
 
 pub fn part_a(input: &str) -> Answer {
-    let response: usize = input
+    let response = input
         .lines()
         .par_bridge()
-        .map(|line| parse_problem(line).unwrap().1)
-        .map(|problem| {
-            let target = to_bitvec(problem.num_bulbs, &problem.target);
-            let buttons = problem
-                .buttons
-                .iter()
-                .map(|vs| to_bitvec(problem.num_bulbs, vs))
-                .collect::<Vec<_>>();
-
-            itertools::Itertools::powerset(buttons.iter())
-                .flat_map(|vs| {
-                    let mut ret = BitVec::from_elem(problem.num_bulbs, false);
-                    for v in vs.iter() {
-                        ret.xor(*v);
-                    }
-                    if ret == target {
-                        return Some(vs.len());
-                    }
-                    None
-                })
+        .map(|line| {
+            let problem = parse_problem(line).unwrap().1;
+            get_children::<true>(&problem.a_cols, &problem.target)
+                .map(|(x_bin, _)| x_bin.iter().sum::<Scalar>())
                 .min()
                 .unwrap()
         })
-        .sum();
+        .sum::<Scalar>();
 
     Answer::Number(response as i64)
 }
 
-fn solve_b(problem: &Problem) -> usize {
-    // x1 * v1 + ... + xn * vn = c
-    // V x = c, solve by minimizing |x|_1
-    //
-    // Linear equation with 0/1 coefficients and integer RHS
-    //
-    // 1. General LP solving. Can implement Gaussian elimination
-    // 2. Diophantine equations
-    // 3. Tree search (slow..)
-    //
-    //  x + y = 1
-    //  x + y = 3
-    //
-    // Is it totally unimodular?
+enum Visit {
+    First(Veci),
+    Second(Veci),
+}
 
-    let mut map: Map<i64> = Map::new(problem.num_bulbs, problem.buttons.len());
-    for (i, button) in problem.buttons.iter().enumerate() {
-        for x in button.iter() {
-            map[(*x, i)] = 1;
+fn solve_b(a_cols: &[Veci], b: &Veci) -> Option<Veci> {
+    let mut results: FxHashMap<Veci, Option<Veci>> = FxHashMap::with_capacity(1_000);
+    let mut child_map: FxHashMap<Veci, Vec<(Veci, Veci)>> = FxHashMap::with_capacity(1_000);
+    let mut stack: Vec<Visit> = Vec::with_capacity(1_000);
+
+    results.insert(Veci::zero(), Some(Veci::zero()));
+    stack.push(Visit::First(*b));
+
+    while let Some(visit) = stack.pop() {
+        match visit {
+            Visit::First(cur) => {
+                if results.contains_key(&cur) {
+                    continue;
+                }
+                stack.push(Visit::Second(cur));
+                let children = get_children::<false>(a_cols, &cur).collect::<Vec<_>>();
+                let entry = child_map.entry(cur).or_insert(children);
+                for (_, b_half) in entry.iter() {
+                    stack.push(Visit::First(*b_half));
+                }
+            }
+            Visit::Second(cur) => {
+                let x_this = child_map[&cur]
+                    .iter()
+                    .flat_map(|(x_bin, b_half)| results[b_half].map(|x_half| *x_bin + x_half * 2))
+                    .min_by_key(|xs| xs.iter().sum::<Scalar>());
+                results.insert(cur, x_this);
+            }
         }
     }
 
-    println!("{}\n", map);
-
-    0
-
-    // type Veci = Vector<8, i64>;
-    //
-    // let mut q: VecDeque<(Veci, usize)> = VecDeque::new();
-    // q.push_back((problem.jolts.iter().map(|x| *x as i64).collect::<Veci>(), 0));
-    //
-    // while let Some((cur, n_ops)) = q.pop_front() {
-    //     if cur.iter().all(|x| *x == 0) {
-    //         return n_ops;
-    //     }
-    //     if cur.iter().any(|x| *x < 0) {
-    //         continue;
-    //     }
-    //     for button in problem.buttons.iter() {
-    //         let mut new_opt = cur;
-    //         for x in button.iter() {
-    //             new_opt[*x] -= 1;
-    //         }
-    //         q.push_back((new_opt, n_ops + 1));
-    //     }
-    // }
-    //
-    // unreachable!("Not reachable")
+    results[b]
 }
 
 pub fn part_b(input: &str) -> Answer {
     let response = input
         .lines()
         .par_bridge()
-        .map(|line| parse_problem(line).unwrap().1)
-        .map(|problem| solve_b(&problem))
-        .sum::<usize>();
+        .map(|line| {
+            let problem = parse_problem(line).unwrap().1;
+            let sol = solve_b(&problem.a_cols, &problem.jolts);
+            sol.unwrap().iter().sum::<Scalar>()
+        })
+        .sum::<Scalar>();
 
     Answer::Number(response as i64)
+}
+
+fn matmul(a_cols: &[Veci], xs: &Veci) -> Veci {
+    a_cols
+        .iter()
+        .zip(xs.iter())
+        .map(|(a, x)| *a * *x)
+        .sum::<Veci>()
 }
 
 #[cfg(test)]

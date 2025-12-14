@@ -1,6 +1,6 @@
 use num_traits::NumAssignRef;
 use std::iter::Sum;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub};
 use std::ops::{Index, IndexMut};
 
 use crate::dir::Dir;
@@ -32,8 +32,16 @@ impl<const N: usize, T: Scalar> Vector<N, T> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        N
+    }
+
+    pub fn is_empty(&self) -> bool {
+        N > 0
+    }
+
     pub fn norm_sq(&self) -> T {
-        self.data.iter().map(|x| *x * *x).sum::<T>()
+        self.iter().map(|x| *x * *x).sum::<T>()
     }
 
     pub fn dist_sq(&self, other: &Self) -> T {
@@ -100,10 +108,9 @@ impl<'a, const N: usize, T: Scalar> Sum<&'a Self> for Vector<N, T> {
 impl<const N: usize, T: Scalar> Add for Vector<N, T> {
     type Output = Self;
     fn add(self, rhs: Vector<N, T>) -> Self::Output {
-        self.data
-            .iter()
-            .zip(rhs.data)
-            .map(|(a, b)| *a + b)
+        self.iter()
+            .zip(rhs.iter())
+            .map(|(a, b)| *a + *b)
             .collect::<Vector<N, T>>()
     }
 }
@@ -111,14 +118,14 @@ impl<const N: usize, T: Scalar> Add for Vector<N, T> {
 impl<const N: usize, T: Scalar> Add<T> for Vector<N, T> {
     type Output = Self;
     fn add(self, rhs: T) -> Self::Output {
-        self.data.iter().map(|a| *a + rhs).collect::<Vector<N, T>>()
+        self.iter().map(|a| *a + rhs).collect::<Vector<N, T>>()
     }
 }
 
 impl<const N: usize, T: Scalar> Neg for Vector<N, T> {
     type Output = Self;
     fn neg(self) -> Self::Output {
-        self.data.iter().map(|a| -(*a)).collect::<Vector<N, T>>()
+        self.iter().map(|a| -(*a)).collect::<Vector<N, T>>()
     }
 }
 
@@ -131,36 +138,57 @@ impl<const N: usize, T: Scalar> Sub for Vector<N, T> {
 
 impl<const N: usize, T: Scalar> AddAssign for Vector<N, T> {
     fn add_assign(&mut self, rhs: Vector<N, T>) {
-        self.data
-            .iter_mut()
-            .zip(rhs.data.iter())
-            .for_each(|(a, b)| *a += b);
+        self.iter_mut().zip(rhs.iter()).for_each(|(a, b)| *a += b);
     }
 }
 
 impl<const N: usize, T: Scalar> Mul<T> for Vector<N, T> {
     type Output = Self;
     fn mul(self, rhs: T) -> Self::Output {
-        self.data.iter().map(|a| *a * rhs).collect::<Vector<N, T>>()
+        self.iter().map(|a| *a * rhs).collect::<Vector<N, T>>()
+    }
+}
+
+impl<const N: usize, T: Scalar> Mul<&Vector<N, T>> for Vector<N, T> {
+    type Output = Self;
+    fn mul(self, rhs: &Vector<N, T>) -> Self::Output {
+        self.iter()
+            .zip(rhs.iter())
+            .map(|(a, b)| *a * *b)
+            .collect::<Vector<N, T>>()
+    }
+}
+
+impl<const N: usize, T: Scalar> Mul<Vector<N, T>> for Vector<N, T> {
+    type Output = Self;
+    fn mul(self, rhs: Vector<N, T>) -> Self::Output {
+        self.mul(&rhs)
     }
 }
 
 impl<const N: usize, T: Scalar> Div<T> for Vector<N, T> {
     type Output = Self;
     fn div(self, rhs: T) -> Self::Output {
-        self.data.iter().map(|a| *a / rhs).collect::<Vector<N, T>>()
+        self.iter().map(|a| *a / rhs).collect::<Vector<N, T>>()
     }
 }
 
 impl<const N: usize, T: Scalar> MulAssign<T> for Vector<N, T> {
     fn mul_assign(&mut self, rhs: T) {
-        self.data.iter_mut().for_each(|a| *a *= rhs);
+        self.iter_mut().for_each(|a| *a *= rhs);
     }
 }
 
 impl<const N: usize, T: Scalar> DivAssign<T> for Vector<N, T> {
     fn div_assign(&mut self, rhs: T) {
-        self.data.iter_mut().for_each(|a| *a /= rhs);
+        self.iter_mut().for_each(|a| *a /= rhs);
+    }
+}
+
+impl<const N: usize, T: Scalar> Rem<T> for Vector<N, T> {
+    type Output = Self;
+    fn rem(self, rhs: T) -> Self::Output {
+        self.iter().map(|a| *a % rhs).collect::<Vector<N, T>>()
     }
 }
 
@@ -182,11 +210,11 @@ impl<T: Scalar> Vec2<T> {
     }
 
     pub fn x_mut(&mut self) -> &mut T {
-        self.data.get_mut(0).unwrap()
+        &mut self.data[0]
     }
 
     pub fn y_mut(&mut self) -> &mut T {
-        self.data.get_mut(1).unwrap()
+        &mut self.data[1]
     }
 
     pub fn cross(&self, other: Vec2<T>) -> T {
